@@ -4,6 +4,10 @@ Extensions of `UIImage` and `NSImage` to encode and decode blur hashes, based on
 
 Based on [Mortenjust's Implementation](https://github.com/mortenjust/Blurhash-macos.git) for macOS
 
+Screenshot
+
+![Screenshot](https://user-images.githubusercontent.com/30172987/207150953-d1177cad-da76-40a8-bfdc-4c05f47ce5a0.png)
+
 # Usage
 There are two ways you can use this package:
 1. Using Async Helpers
