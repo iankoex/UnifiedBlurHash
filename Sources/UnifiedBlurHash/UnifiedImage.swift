@@ -13,7 +13,7 @@ import UIKit
 public typealias UnifiedImage = UIImage
 
 @available(macOS 10.15, iOS 13, *)
-extension Image {
+public extension Image {
     init(unifiedImage: UnifiedImage) {
         self.init(uiImage: unifiedImage)
     }
@@ -26,7 +26,7 @@ import AppKit
 public typealias UnifiedImage = NSImage
 
 @available(macOS 10.15, iOS 13, *)
-extension Image {
+public extension Image {
     init(unifiedImage: UnifiedImage) {
         self.init(nsImage: unifiedImage)
     }
