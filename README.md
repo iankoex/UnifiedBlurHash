@@ -4,6 +4,30 @@ Extensions of `UIImage` and `NSImage` to encode and decode blur hashes, based on
 
 Based on [Mortenjust's Implementation](https://github.com/mortenjust/Blurhash-macos.git) for macOS
 
+Screenshot
+
+![Screenshot](https://user-images.githubusercontent.com/30172987/207150953-d1177cad-da76-40a8-bfdc-4c05f47ce5a0.png)
+
+# About [BlurHash](http://blurha.sh)
+
+BlurHash is a compact representation of a placeholder for an image.
+
+Learn More from the [BlurHash Repo](https://github.com/woltapp/blurhash.git)
+
+### Why would you want this?
+
+Does your designer cry every time you load their beautifully designed screen, and it is full of empty boxes because all the
+images have not loaded yet? Does your database engineer cry when you want to solve this by trying to cram little thumbnail
+images into your data to show as placeholders?
+
+BlurHash will solve your problems! How? Like this:
+
+![WhyBlurHash](https://user-images.githubusercontent.com/30172987/207242393-5446ece1-7d55-412f-92b6-0a7c4cf36860.png)
+
+
+You can also see nice examples and try it out yourself at [blurha.sh](http://blurha.sh/)!
+Learn More from the [BlurHash Repo](https://github.com/woltapp/blurhash.git)
+
 # Usage
 There are two ways you can use this package:
 1. Using Async Helpers
