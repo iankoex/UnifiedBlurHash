@@ -52,7 +52,7 @@ let image = UnifiedImage(blurHash: blurHashString, size: .init(width: 32, height
     
 ```
 
-# SwiftUI Example
+# SwiftUI Examples
 
 ```swift 
 
@@ -106,7 +106,23 @@ struct ContentView: View {
         }
     }
 }
+```
 
+or 
+
+```swift 
+
+import SwiftUI
+import UnifiedBlurHash
+
+struct ContentView: View {
+    var blurHash: String = "LVN^Odxa?WNa-;WB£,WBs;baR*af"
+
+    var body: some View {
+        Image(blurHash: blurHash)?
+            .resizable()
+    }
+}
 
 ```
 Under the hood `UnifiedImage` is just `UIImage` or `NSImage` depending on the platform.
