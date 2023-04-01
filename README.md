@@ -1,5 +1,8 @@
 # UnifiedBlurHash
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fiankoex%2FUnifiedBlurHash%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/iankoex/UnifiedBlurHash)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fiankoex%2FUnifiedBlurHash%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/iankoex/UnifiedBlurHash)
+
 Extensions of `UIImage` and `NSImage` to encode and decode blur hashes, based on [Wolt's Implementation](https://github.com/woltapp/blurhash) for Swift (iOS).
 
 Based on [Mortenjust's Implementation](https://github.com/mortenjust/Blurhash-macos.git) for macOS
