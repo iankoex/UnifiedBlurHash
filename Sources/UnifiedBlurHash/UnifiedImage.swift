@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-#if os(iOS)
+#if canImport(UIKit)
 import UIKit
 
 public typealias UnifiedImage = UIImage
 
-@available(macOS 10.15, iOS 13, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public extension Image {
     init(unifiedImage: UnifiedImage) {
         self.init(uiImage: unifiedImage)
@@ -25,7 +25,7 @@ import AppKit
 
 public typealias UnifiedImage = NSImage
 
-@available(macOS 10.15, iOS 13, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public extension Image {
     init(unifiedImage: UnifiedImage) {
         self.init(nsImage: unifiedImage)

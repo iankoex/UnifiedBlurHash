@@ -12,7 +12,7 @@ public extension UnifiedImage {
     }
 }
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 
 public extension UnifiedImage {
@@ -35,12 +35,12 @@ public extension UnifiedImage {
 
 #endif
 
-#if canImport(UIKit)
+#if canImport(UIKit) && !os(watchOS)
 import UIKit
 import Foundation
 
 public extension UnifiedImage {
-
+    
     func resized(to newSize: CGSize) -> UnifiedImage? {
         let renderer = UIGraphicsImageRenderer(size: newSize)
 
@@ -48,6 +48,21 @@ public extension UnifiedImage {
             self.draw(in: CGRect(origin: .zero, size: newSize))
         }
         return image
+    }
+}
+
+#elseif os(watchOS)
+
+import UIKit
+import Foundation
+
+public extension UnifiedImage {
+    
+    func resized(to newSize: CGSize) -> UnifiedImage? {
+        UIGraphicsBeginImageContextWithOptions(size, false, self.scale)
+        defer { UIGraphicsEndImageContext() }
+        draw(in: CGRect(origin: .zero, size: newSize))
+        return UIGraphicsGetImageFromCurrentImageContext()
     }
 }
 

@@ -8,12 +8,12 @@ public struct UnifiedBlurHash {
     public init() {
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func getBlurHashString(from unifiedImage: UnifiedImage) async -> String? {
         unifiedImage.small?.blurHash(numberOfComponents: (4,3))
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func getUnifiedImage(from blurHashString: String) async -> UnifiedImage? {
         UnifiedImage(blurHash: blurHashString, size: .init(width: 32, height: 32))
     }

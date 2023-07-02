@@ -112,7 +112,7 @@ extension UnifiedImage {
 #if os (macOS)
         self.init(cgImage: cgImage, size: size)
 #endif
-#if os(iOS)
+#if canImport(UIKit)
         self.init(cgImage: cgImage)
 #endif
     }

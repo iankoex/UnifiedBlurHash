@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-@available(macOS 10.15, iOS 13, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public extension Image {
     init?(blurHash: String, size: CGSize = CGSize(width: 32, height: 32), punch: Float = 1) {
         let unifiedImg = UnifiedImage(blurHash: blurHash, size: size, punch: punch)
