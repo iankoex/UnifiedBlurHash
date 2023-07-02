@@ -131,4 +131,4 @@ struct ContentView: View {
 Under the hood `UnifiedImage` is just `UIImage` or `NSImage` depending on the platform.
 
 # License
-Run Wild
+MIT
