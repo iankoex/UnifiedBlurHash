@@ -118,6 +118,15 @@ extension UnifiedImage {
     }
 }
 
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+func decodeAverageColor(blurHash: String) -> Color {
+    let value = String(blurHash[2 ..< 6]).decode83()
+    let intR = value >> 16
+    let intG = (value >> 8) & 255
+    let intB = value & 255
+    return Color(red: Double(intR)/255, green: Double(intG)/255, blue: Double(intB)/255)
+}
+
 private func decodeDC(_ value: Int) -> (Float, Float, Float) {
     let intR = value >> 16
     let intG = (value >> 8) & 255

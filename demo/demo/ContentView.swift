@@ -11,7 +11,8 @@ import UnifiedBlurHash
 struct ContentView: View {
     @State private var imageString = "LWC$.Wx]Sjof~Wx]X9oe?btRofax"
     @State private var image: UnifiedImage? = nil
-    
+    @State private var color: Color?
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -30,6 +31,8 @@ struct ContentView: View {
                         .aspectRatio(9/16, contentMode: .fit)
                         .frame(maxWidth: 300)
                 }
+
+                color?.frame(width: 300, height: 300)
             }
             .padding(.horizontal)
         }
@@ -54,6 +57,7 @@ struct ContentView: View {
     
     private func decode() {
         Task {
+            self.color = await UnifiedBlurHash.getAverageColor(from: imageString)
             let image = await UnifiedBlurHash.getUnifiedImage(from: imageString)
             guard let image = image else {
                 return
