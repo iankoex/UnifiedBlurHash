@@ -1,22 +1,33 @@
 # This workflow will build a Swift project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
 
-name: Swift
+name: Swift Build and Test
 
 on:
+  workflow_dispatch:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    name: Build and Test
     runs-on: macos-latest
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          swift-version: "6.1.0"
+      - name: List available Xcode versions
+        run: ls /Applications | grep Xcode
+      - name: Set up Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+      - name: Show current version of Xcode
+        run: xcodebuild -version
+      - name: Show current version of Swift
+        run: swift -version
       - name: Build
         run: swift build -v
       - name: Run tests
