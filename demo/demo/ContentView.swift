@@ -10,31 +10,42 @@ import UnifiedBlurHash
 
 struct ContentView: View {
     @State private var imageString = "LWC$.Wx]Sjof~Wx]X9oe?btRofax"
-    @State private var image: UnifiedImage? = nil
-    @State private var color: Color?
+    @State private var imageDecodedFromBlurHashString: UnifiedImage? = nil
+    @State private var averageColorFromBlurHashString: Color?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        List {
+            Section(content: {
                 Button("Encode", action: encode)
-                
+
                 Button("Decode", action: decode)
-                
+            })
+
+            Section(content: {
                 Image("sunflower")
                     .resizable()
                     .aspectRatio(9/16, contentMode: .fit)
                     .frame(maxWidth: 300)
-                
-                if image != nil {
-                    Image(unifiedImage: image!)
+            }, header: {
+                Text("Original Image")
+            })
+
+            Section(content: {
+                if let imageDecodedFromBlurHashString {
+                    Image(unifiedImage: imageDecodedFromBlurHashString)
                         .resizable()
                         .aspectRatio(9/16, contentMode: .fit)
                         .frame(maxWidth: 300)
                 }
+            }, header: {
+                Text("Image Decoded From BlurHash String")
+            })
 
-                color?.frame(width: 300, height: 300)
-            }
-            .padding(.horizontal)
+            Section(content: {
+                averageColorFromBlurHashString?.frame(width: 300, height: 300)
+            }, header: {
+                Text("Average Color From BlurHash String")
+            })
         }
     }
     
@@ -57,13 +68,13 @@ struct ContentView: View {
     
     private func decode() {
         Task {
-            self.color = await UnifiedBlurHash.getAverageColor(from: imageString)
             let image = await UnifiedBlurHash.getUnifiedImage(from: imageString)
+            self.averageColorFromBlurHashString = await UnifiedBlurHash.getAverageColor(from: imageString)
             guard let image = image else {
                 return
             }
             DispatchQueue.main.async {
-                self.image = image
+                self.imageDecodedFromBlurHashString = image
             }
         }
     }
