@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fiankoex%2FUnifiedBlurHash%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/iankoex/UnifiedBlurHash)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fiankoex%2FUnifiedBlurHash%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/iankoex/UnifiedBlurHash)
-[![Swift](https://github.com/iankoex/UnifiedBlurHash/actions/workflows/swift.yml/badge.svg)](https://github.com/iankoex/UnifiedBlurHash/actions/workflows/swift.yml)
+[![Swift Build and Test](https://github.com/iankoex/UnifiedBlurHash/actions/workflows/swift.yml/badge.svg)](https://github.com/iankoex/UnifiedBlurHash/actions/workflows/swift.yml)
 
 Extensions of `UIImage` and `NSImage` to encode and decode blur hashes, based on [Wolt's Implementation](https://github.com/woltapp/blurhash) for Swift (iOS).
 
