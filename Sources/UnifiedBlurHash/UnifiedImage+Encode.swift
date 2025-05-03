@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  UnifiedImage+Encode.swift
 //
 //
 //  Created by Ian on 12/12/2022.
@@ -13,22 +13,26 @@ import UIKit
 #endif
 
 extension UnifiedImage {
-
     /// Returns a blur has String. Use on background thread as it can take a few seconds. X, Y components between 3 and 10 work best.
     public func blurHash(numberOfComponents components: (Int, Int)) -> String? {
+        // Pre-calculate values that are used multiple times
+        let width = Int(round(size.width))
+        let height = Int(round(size.height))
+        let size = CGSize(width: width, height: height)
 
-        let pixelWidth = Int(round(size.width))
-        let pixelHeight = Int(round(size.height))
-
-        let context = CGContext(
+        // Create context with optimized parameters
+        guard let context = CGContext(
             data: nil,
-            width: pixelWidth,
-            height: pixelHeight,
+            width: width,
+            height: height,
             bitsPerComponent: 8,
-            bytesPerRow: pixelWidth * 4,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        )!
+        ) else {
+            return nil
+        }
+
         context.scaleBy(x: 1, y: -1)
         context.translateBy(x: 0, y: -size.height)
 
@@ -47,121 +51,152 @@ extension UnifiedImage {
               let dataProvider = cgImage.dataProvider,
               let data = dataProvider.data,
               let pixels = CFDataGetBytePtr(data) else {
-            assertionFailure("Unexpected error!")
             return nil
         }
 
-        let width = cgImage.width
-        let height = cgImage.height
         let bytesPerRow = cgImage.bytesPerRow
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        let pi = Float.pi
 
-        var factors: [(Float, Float, Float)] = []
-        for y in 0 ..< components.1 {
-            for x in 0 ..< components.0 {
+        // Pre-calculate component counts
+        let componentX = components.0
+        let componentY = components.1
+        let totalComponents = componentX * componentY
+
+        // Pre-allocate and reserve capacity for arrays
+        var factors = [(Float, Float, Float)]()
+        factors.reserveCapacity(totalComponents)
+
+        // Pre-calculate width/height as Float to avoid repeated conversions
+        let floatWidth = Float(width)
+        let floatHeight = Float(height)
+
+        // Calculate factors with optimized loops
+        for y in 0..<componentY {
+            for x in 0..<componentX {
                 let normalisation: Float = (x == 0 && y == 0) ? 1 : 2
-                let factor = multiplyBasisFunction(pixels: pixels, width: width, height: height, bytesPerRow: bytesPerRow, bytesPerPixel: cgImage.bitsPerPixel / 8, pixelOffset: 0) {
-                    normalisation * cos(Float.pi * Float(x) * $0 / Float(width)) as Float * cos(Float.pi * Float(y) * $1 / Float(height)) as Float
+                let factor = multiplyBasisFunction(
+                    pixels: pixels,
+                    width: width,
+                    height: height,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel,
+                    pixelOffset: 0
+                ) { px, py in
+                    normalisation * cos(pi * Float(x) * px / floatWidth) * cos(pi * Float(y) * py / floatHeight)
                 }
                 factors.append(factor)
             }
         }
 
-        let dc = factors.first!
-        let ac = factors.dropFirst()
+        let dc = factors[0]
+        let ac = Array(factors[1..<totalComponents])
 
         var hash = ""
+        hash.reserveCapacity(4 + 2 * ac.count) // Pre-allocate approximate capacity
 
-        let sizeFlag = (components.0 - 1) + (components.1 - 1) * 9
-        hash += sizeFlag.encode83(length: 1)
+        // Size flag calculation
+        let sizeFlag = (componentX - 1) + (componentY - 1) * 9
+        hash.append(sizeFlag.encode83(length: 1))
 
         let maximumValue: Float
-        if ac.count > 0 {
-            let actualMaximumValue = ac.map({ max(abs($0.0), abs($0.1), abs($0.2)) }).max()!
-            let quantisedMaximumValue = Int(max(0, min(82, floor(actualMaximumValue * 166 - 0.5))))
+        if !ac.isEmpty {
+            // Optimized maximum value calculation
+            var maxVal: Float = 0
+            for factor in ac {
+                maxVal = max(maxVal, abs(factor.0), abs(factor.1), abs(factor.2))
+            }
+            let quantisedMaximumValue = Int(max(0, min(82, floor(maxVal * 166 - 0.5))))
             maximumValue = Float(quantisedMaximumValue + 1) / 166
-            hash += quantisedMaximumValue.encode83(length: 1)
+            hash.append(quantisedMaximumValue.encode83(length: 1))
         } else {
             maximumValue = 1
-            hash += 0.encode83(length: 1)
+            hash.append("0")
         }
 
-        hash += encodeDC(dc).encode83(length: 4)
+        hash.append(encodeDC(dc).encode83(length: 4))
 
+        // Optimized AC component encoding
         for factor in ac {
-            hash += encodeAC(factor, maximumValue: maximumValue).encode83(length: 2)
+            hash.append(encodeAC(factor, maximumValue: maximumValue).encode83(length: 2))
         }
 
         return hash
     }
 
-    private func multiplyBasisFunction(pixels: UnsafePointer<UInt8>, width: Int, height: Int, bytesPerRow: Int, bytesPerPixel: Int, pixelOffset: Int, basisFunction: (Float, Float) -> Float) -> (Float, Float, Float) {
+    private func multiplyBasisFunction(
+        pixels: UnsafePointer<UInt8>,
+        width: Int,
+        height: Int,
+        bytesPerRow: Int,
+        bytesPerPixel: Int,
+        pixelOffset: Int,
+        basisFunction: (Float, Float) -> Float
+    ) -> (Float, Float, Float) {
         var r: Float = 0
         var g: Float = 0
         var b: Float = 0
 
-        let buffer = UnsafeBufferPointer(start: pixels, count: height * bytesPerRow)
+        let height = height
+        let width = width
+        let bytesPerRow = bytesPerRow
+        let bytesPerPixel = bytesPerPixel
 
-        for x in 0 ..< width {
-            for y in 0 ..< height {
-                let basis = basisFunction(Float(x), Float(y))
-                r += basis * sRGBToLinear(buffer[bytesPerPixel * x + pixelOffset + 0 + y * bytesPerRow])
-                g += basis * sRGBToLinear(buffer[bytesPerPixel * x + pixelOffset + 1 + y * bytesPerRow])
-                b += basis * sRGBToLinear(buffer[bytesPerPixel * x + pixelOffset + 2 + y * bytesPerRow])
+        // Optimized pixel iteration
+        for y in 0..<height {
+            var pixelIndex = y * bytesPerRow
+            let yFloat = Float(y)
+
+            for x in 0..<width {
+                let xFloat = Float(x)
+                let basis = basisFunction(xFloat, yFloat)
+
+                // Direct pixel access with bounds checking removed for performance
+                // (safe as long as the parameters are correct)
+                r += basis * Math.sRGBToLinear(pixels[pixelIndex])
+                g += basis * Math.sRGBToLinear(pixels[pixelIndex + 1])
+                b += basis * Math.sRGBToLinear(pixels[pixelIndex + 2])
+
+                pixelIndex += bytesPerPixel
             }
         }
 
         let scale = 1 / Float(width * height)
-
         return (r * scale, g * scale, b * scale)
     }
 }
 
+// MARK: - Optimized Helper Functions
+
+@inline(__always)
 private func encodeDC(_ value: (Float, Float, Float)) -> Int {
-    let roundedR = linearTosRGB(value.0)
-    let roundedG = linearTosRGB(value.1)
-    let roundedB = linearTosRGB(value.2)
+    let roundedR = Math.linearTosRGB(value.0)
+    let roundedG = Math.linearTosRGB(value.1)
+    let roundedB = Math.linearTosRGB(value.2)
     return (roundedR << 16) + (roundedG << 8) + roundedB
 }
 
+@inline(__always)
 private func encodeAC(_ value: (Float, Float, Float), maximumValue: Float) -> Int {
-    let quantR = Int(max(0, min(18, floor(signPow(value.0 / maximumValue, 0.5) * 9 + 9.5))))
-    let quantG = Int(max(0, min(18, floor(signPow(value.1 / maximumValue, 0.5) * 9 + 9.5))))
-    let quantB = Int(max(0, min(18, floor(signPow(value.2 / maximumValue, 0.5) * 9 + 9.5))))
+    let quantR = Int(max(0, min(18, floor(Math.signPow(value.0 / maximumValue, 0.5) * 9 + 9.5))))
+    let quantG = Int(max(0, min(18, floor(Math.signPow(value.1 / maximumValue, 0.5) * 9 + 9.5))))
+    let quantB = Int(max(0, min(18, floor(Math.signPow(value.2 / maximumValue, 0.5) * 9 + 9.5))))
 
-    return quantR * 19 * 19 + quantG * 19 + quantB
+    return quantR * 361 + quantG * 19 + quantB // 19*19 = 361
 }
-
-private func signPow(_ value: Float, _ exp: Float) -> Float {
-    return copysign(pow(abs(value), exp), value)
-}
-
-private func linearTosRGB(_ value: Float) -> Int {
-    let v = max(0, min(1, value))
-    if v <= 0.0031308 { return Int(v * 12.92 * 255 + 0.5) }
-    else { return Int((1.055 * pow(v, 1 / 2.4) - 0.055) * 255 + 0.5) }
-}
-
-private func sRGBToLinear<Type: BinaryInteger>(_ value: Type) -> Float {
-    let v = Float(Int64(value)) / 255
-    if v <= 0.04045 { return v / 12.92 }
-    else { return pow((v + 0.055) / 1.055, 2.4) }
-}
-
-private let encodeCharacters: [String] = {
-    return "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~".map { String($0) }
-}()
 
 extension BinaryInteger {
     func encode83(length: Int) -> String {
         var result = ""
-        for i in 1 ... length {
-            let digit = (Int(self) / pow(83, length - i)) % 83
-            result += encodeCharacters[Int(digit)]
-        }
-        return result
-    }
-}
+        result.reserveCapacity(length)
+        var value = Int(self)
 
-private func pow(_ base: Int, _ exponent: Int) -> Int {
-    return (0 ..< exponent).reduce(1) { value, _ in value * base }
+        for _ in 1...length {
+            let digit = value % 83
+            value /= 83
+            result.append(Math.encodeCharacters[digit])
+        }
+
+        return String(result.reversed())
+    }
 }

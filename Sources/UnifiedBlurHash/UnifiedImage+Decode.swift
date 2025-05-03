@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  UnifiedImage+Decode.swift
 //
 //
 //  Created by Ian on 12/12/2022.
@@ -75,9 +75,9 @@ extension UnifiedImage {
                     j += 1
                 }
 
-                let intR = UInt8(linearTosRGB(r))
-                let intG = UInt8(linearTosRGB(g))
-                let intB = UInt8(linearTosRGB(b))
+                let intR = UInt8(Math.linearTosRGB(r))
+                let intG = UInt8(Math.linearTosRGB(g))
+                let intB = UInt8(Math.linearTosRGB(b))
 
                 pixels[3 * x + 0 + y * bytesPerRow] = intR
                 pixels[3 * x + 1 + y * bytesPerRow] = intG
@@ -131,7 +131,7 @@ private func decodeDC(_ value: Int) -> (Float, Float, Float) {
     let intR = value >> 16
     let intG = (value >> 8) & 255
     let intB = value & 255
-    return (sRGBToLinear(intR), sRGBToLinear(intG), sRGBToLinear(intB))
+    return (Math.sRGBToLinear(intR), Math.sRGBToLinear(intG), Math.sRGBToLinear(intB))
 }
 
 private func decodeAC(_ value: Int, maximumValue: Float) -> (Float, Float, Float) {
@@ -140,37 +140,17 @@ private func decodeAC(_ value: Int, maximumValue: Float) -> (Float, Float, Float
     let quantB = value % 19
 
     let rgb = (
-        signPow((Float(quantR) - 9) / 9, 2) * maximumValue,
-        signPow((Float(quantG) - 9) / 9, 2) * maximumValue,
-        signPow((Float(quantB) - 9) / 9, 2) * maximumValue
+        Math.signPow((Float(quantR) - 9) / 9, 2) * maximumValue,
+        Math.signPow((Float(quantG) - 9) / 9, 2) * maximumValue,
+        Math.signPow((Float(quantB) - 9) / 9, 2) * maximumValue
     )
 
     return rgb
 }
 
-private func signPow(_ value: Float, _ exp: Float) -> Float {
-    return copysign(pow(abs(value), exp), value)
-}
-
-private func linearTosRGB(_ value: Float) -> Int {
-    let v = max(0, min(1, value))
-    if v <= 0.0031308 { return Int(v * 12.92 * 255 + 0.5) }
-    else { return Int((1.055 * pow(v, 1 / 2.4) - 0.055) * 255 + 0.5) }
-}
-
-private func sRGBToLinear<Type: BinaryInteger>(_ value: Type) -> Float {
-    let v = Float(Int64(value)) / 255
-    if v <= 0.04045 { return v / 12.92 }
-    else { return pow((v + 0.055) / 1.055, 2.4) }
-}
-
-private let encodeCharacters: [String] = {
-    return "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~".map { String($0) }
-}()
-
 private let decodeCharacters: [String: Int] = {
     var dict: [String: Int] = [:]
-    for (index, character) in encodeCharacters.enumerated() {
+    for (index, character) in Math.encodeCharacters.map({ String($0) }).enumerated() {
         dict[character] = index
     }
     return dict
